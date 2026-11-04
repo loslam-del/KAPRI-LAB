@@ -48,7 +48,6 @@ jobs:
           gradle-version: "8.7"
       - name: Build Android app and run unit tests
         id: android_build
-        continue-on-error: true
         run: gradle -p source testDebugUnitTest assembleDebug --no-daemon
       - name: Generate report
         if: always()
