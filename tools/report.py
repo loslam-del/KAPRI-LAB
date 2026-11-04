@@ -10,8 +10,8 @@ from pathlib import Path
 def build_report():
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "source_repository": os.getenv("SOURCE_REPOSITORY", "loslam-del/K.A.P.R.И"),
-        "source_commit": os.getenv("SOURCE_COMMIT", "unknown"),
+        "source_repository": os.getenv("SOURCE_REPOSITORY", "loslam-del/K.A.P.R.I"),
+        "source_commit_or_trigger_sha": os.getenv("SOURCE_COMMIT", "unknown"),
         "lab_unit_tests": os.getenv("LAB_TEST_OUTCOME", "not-run"),
         "android_build_and_unit_tests": os.getenv("ANDROID_BUILD_OUTCOME", "not-run"),
         "apk_variant": os.getenv("APK_VARIANT", "debug"),
@@ -32,7 +32,7 @@ def markdown(report):
         "# KAPRI-LAB report", "",
         f"- Generated (UTC): {report['generated_at']}",
         f"- Source: `{report['source_repository']}`",
-        f"- Source commit: `{report['source_commit']}`",
+        f"- Source commit: `{report['source_commit_or_trigger_sha']}`",
         f"- Lab unit tests: **{report['lab_unit_tests']}**",
         f"- Android build + unit tests: **{report['android_build_and_unit_tests']}**",
         f"- APK variant: **{report['apk_variant']}**",
