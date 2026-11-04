@@ -30,6 +30,8 @@ jobs:
       - name: Run lab unit tests
         id: lab_tests
         run: python -m unittest discover -s tests -v
+      - name: Validate Android update identity
+        run: python tools/android_contract.py source/app/build.gradle.kts
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
