@@ -1,0 +1,71 @@
+name: KAPRI Lab Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "bootstrap/**"]
+  pull_request:
+  schedule:
+    - cron: "0 8 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout lab
+        uses: actions/checkout@v4
+      - name: Checkout KAPRI source
+        uses: actions/checkout@v4
+        with:
+          repository: loslam-del/K.A.P.R.I
+          path: source
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run lab unit tests
+        id: lab_tests
+        run: python -m unittest discover -s tests -v
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: Build Android app and run unit tests
+        id: android_build
+        continue-on-error: true
+        run: gradle -p source testDebugUnitTest assembleDebug
+      - name: Generate report
+        if: always()
+        env:
+          LAB_TEST_OUTCOME: ${{ steps.lab_tests.outcome }}
+          ANDROID_BUILD_OUTCOME: ${{ steps.android_build.outcome }}
+          SOURCE_REPOSITORY: loslam-del/K.A.P.R.I
+          SOURCE_COMMIT: ${{ github.sha }}
+          WORKFLOW_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          mkdir -p reports
+          python tools/report.py --output reports/report.md --json-output reports/report.json
+      - name: Add report to job summary
+        if: always()
+        run: cat reports/report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report and APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kapri-lab-report
+          path: |
+            reports/
+            source/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 14
