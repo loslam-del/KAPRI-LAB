@@ -6,7 +6,7 @@ on:
     branches: [main, "bootstrap/**"]
   pull_request:
   schedule:
-    - cron: "0 8 * * 1"
+    - cron: "0 1 * * *"
 
 permissions:
   contents: read
@@ -23,6 +23,9 @@ jobs:
           repository: loslam-del/K.A.P.R.I
           path: source
           fetch-depth: 1
+      - name: Record source revision
+        id: source_revision
+        run: echo "sha=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -46,14 +49,14 @@ jobs:
       - name: Build Android app and run unit tests
         id: android_build
         continue-on-error: true
-        run: gradle -p source testDebugUnitTest assembleDebug
+        run: gradle -p source testDebugUnitTest assembleDebug --no-daemon
       - name: Generate report
         if: always()
         env:
           LAB_TEST_OUTCOME: ${{ steps.lab_tests.outcome }}
           ANDROID_BUILD_OUTCOME: ${{ steps.android_build.outcome }}
           SOURCE_REPOSITORY: loslam-del/K.A.P.R.I
-          SOURCE_COMMIT: ${{ github.sha }}
+          SOURCE_COMMIT: ${{ steps.source_revision.outputs.sha }}
           WORKFLOW_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           mkdir -p reports
