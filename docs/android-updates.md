@@ -2,7 +2,9 @@
 
 Current KAPRI package identity:
 - applicationId: com.example.screenai
-- versionCode: maintain in source/app/build.gradle.kts and increase for each release.
+- next default versionCode: 2 (the previous baseline was 1)
+- next default versionName: 1.1
+- keep increasing versionCode for every subsequent release.
 
 ## Why Android may report an app conflict
 
