@@ -1,0 +1,47 @@
+name: KAPRI Night AI Research
+
+on:
+  workflow_dispatch:
+    inputs:
+      focus:
+        description: "Дополнительный фокус исследования"
+        required: false
+        default: "Предложи лучшие улучшения К.А.П.Р.И. и план развития Mobile Runner"
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout KAPRI source
+        uses: actions/checkout@v4
+        with:
+          repository: loslam-del/K.A.P.R.I
+          path: source
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run AI research
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          RESEARCH_FOCUS: ${{ inputs.focus }}
+          SOURCE_REPOSITORY: loslam-del/K.A.P.R.I
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          mkdir -p reports
+          python tools/idea_research.py --source source --output reports/overnight-ideas.md
+      - name: Upload research report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kapri-ai-research
+          path: reports/overnight-ideas.md
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Add report to job summary
+        if: always() && hashFiles('reports/overnight-ideas.md') != ''
+        run: cat reports/overnight-ideas.md >> "$GITHUB_STEP_SUMMARY"
