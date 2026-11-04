@@ -1,18 +1,18 @@
-name: KAPRI Night AI Research
+name: KAPRI Night AI Council
 
 on:
   workflow_dispatch:
     inputs:
       focus:
-        description: "Дополнительный фокус исследования"
+        description: "Тема ночного исследования"
         required: false
-        default: "Предложи лучшие улучшения К.А.П.Р.И. и план развития Mobile Runner"
+        default: "Найти лучшие улучшения К.А.П.Р.И. и план развития Mobile Runner"
 permissions:
   contents: read
 jobs:
-  research:
+  council:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Checkout KAPRI source
@@ -24,24 +24,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run AI research
+      - name: Run Gemini + OpenAI council
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
           RESEARCH_FOCUS: ${{ inputs.focus }}
           SOURCE_REPOSITORY: loslam-del/K.A.P.R.I
           SOURCE_COMMIT: ${{ github.sha }}
         run: |
           mkdir -p reports
-          python tools/idea_research.py --source source --output reports/overnight-ideas.md
-      - name: Upload research report
+          python tools/ai_council.py --source source --output reports/overnight-council.md
+      - name: Upload council report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kapri-ai-research
-          path: reports/overnight-ideas.md
+          name: kapri-ai-council
+          path: reports/overnight-council.md
           if-no-files-found: warn
           retention-days: 30
       - name: Add report to job summary
-        if: always() && hashFiles('reports/overnight-ideas.md') != ''
-        run: cat reports/overnight-ideas.md >> "$GITHUB_STEP_SUMMARY"
+        if: always() && hashFiles('reports/overnight-council.md') != ''
+        run: cat reports/overnight-council.md >> "$GITHUB_STEP_SUMMARY"
